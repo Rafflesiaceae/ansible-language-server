@@ -307,6 +307,7 @@ export class AnsibleLanguageService {
               document,
               params.position,
               await context.docsLibrary,
+              this.workspaceManager?.clientCapabilities?.textDocument?.declaration?.linkSupport,
             );
           }
         }

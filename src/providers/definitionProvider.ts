@@ -1,4 +1,4 @@
-import { DefinitionLink, Range } from "vscode-languageserver";
+import { Definition, DefinitionLink, Range } from "vscode-languageserver";
 import { Position, TextDocument } from "vscode-languageserver-textdocument";
 import { Scalar } from "yaml/types";
 import { DocsLibrary } from "../services/docsLibrary";
@@ -15,7 +15,8 @@ export async function getDefinition(
   document: TextDocument,
   position: Position,
   docsLibrary: DocsLibrary,
-): Promise<DefinitionLink[] | null> {
+  linkSupport: Boolean,
+): Promise<Definition | DefinitionLink[] | null> {
   const yamlDocs = parseAllDocuments(document.getText());
   const path = getPathAt(document, position, yamlDocs);
   if (path) {
@@ -32,26 +33,38 @@ export async function getDefinition(
         );
         if (module) {
           const range = getOrigRange(node);
-          return [
-            {
-              targetUri: module.source,
-              originSelectionRange: range
+          if (linkSupport) {
+            return [
+              {
+                targetUri: module.source,
+                originSelectionRange: range
                 ? toLspRange(range, document)
                 : undefined,
-              targetRange: Range.create(
+                targetRange: Range.create(
+                  module.sourceLineRange[0],
+                  0,
+                  module.sourceLineRange[1],
+                  0,
+                ),
+                targetSelectionRange: Range.create(
+                  module.sourceLineRange[0],
+                  0,
+                  module.sourceLineRange[1],
+                  0,
+                ),
+              }
+            ]
+          } else {
+            return {
+              uri: "file://"+module.source,
+              range: Range.create(
                 module.sourceLineRange[0],
                 0,
                 module.sourceLineRange[1],
                 0,
               ),
-              targetSelectionRange: Range.create(
-                module.sourceLineRange[0],
-                0,
-                module.sourceLineRange[1],
-                0,
-              ),
-            },
-          ];
+            }
+          };
         }
       }
     }
