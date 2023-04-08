@@ -346,7 +346,7 @@ export class ExecutionEnvironment {
     ];
 
     if (!this.doesContainerNameExist(containerName)) {
-      console.log(
+      console.debug(
         `clean up container not required as container with name ${containerName} does not exist`,
       );
       return;

@@ -50,13 +50,13 @@ export async function getResultsThroughCommandRunner(cmd, arg) {
     );
 
     if (result.stderr) {
-      console.log(
+      console.debug(
         `cmd '${cmd} ${arg}' has the following error/warning: ${result.stderr}`,
       );
       return result;
     }
   } catch (error) {
-    console.log(
+    console.debug(
       `cmd '${cmd} ${arg}' was not executed with the following error: ' ${error.toString()}`,
     );
     return undefined;
@@ -201,7 +201,7 @@ async function getExecutionEnvironmentInfo() {
     eeServiceWorking = true;
   } catch (error) {
     eeServiceWorking = false;
-    console.log(error);
+    console.debug(error);
   }
 
   if (eeServiceWorking) {

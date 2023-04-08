@@ -89,7 +89,7 @@ export class CommandRunner {
       );
       return executablePath.stdout.trim();
     } catch (error) {
-      console.log(error);
+      console.debug(error);
     }
 
     try {
@@ -97,7 +97,7 @@ export class CommandRunner {
       const outParts = executablePath.stdout.split(":");
       return outParts.length >= 2 ? outParts[1].trim() : undefined;
     } catch (error) {
-      console.log(error);
+      console.debug(error);
     }
   }
 }

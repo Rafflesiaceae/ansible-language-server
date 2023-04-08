@@ -39,7 +39,7 @@ export async function doValidate(
 
     const settings = await context.documentSettings.get(textDocument.uri);
     if (!settings.validation.enabled) {
-      console.log("Validation disabled");
+      console.debug("Validation disabled");
 
       // this is done to remove the cache as well
       const blankDiagnostics = new Map<string, Diagnostic[]>();
