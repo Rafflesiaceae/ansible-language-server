@@ -156,62 +156,79 @@ export class AnsibleLint {
       if (report instanceof Array) {
         for (const item of report) {
           if (
-            typeof item.check_name === "string" &&
-            item.location &&
-            typeof item.location.path === "string" &&
+            typeof item.check_name !== "string" ||
+            !item.location ||
+            typeof item.location.path !== "string"
+          ) {
+            continue
+          }
+
+          let begin_line: any
+          let begin_column: any
+
+          if ( // location.lines
             item.location.lines &&
             (item.location.lines.begin ||
               typeof item.location.lines.begin === "number")
           ) {
-            const begin_line =
+            begin_line =
               item.location.lines.begin.line || item.location.lines.begin || 1;
-            const begin_column = item.location.lines.begin.column || 1;
-            const start: Position = {
-              line: begin_line - 1,
-              character: begin_column - 1,
-            };
-            const end: Position = {
-              line: begin_line - 1,
-              character: integer.MAX_VALUE,
-            };
-            const range: Range = {
-              start: start,
-              end: end,
-            };
-
-            let severity: DiagnosticSeverity = DiagnosticSeverity.Error;
-            if (item.level) {
-              if (item.level === "error") {
-                severity = DiagnosticSeverity.Error;
-              } else if (item.level === "warning") {
-                severity = DiagnosticSeverity.Warning;
-              }
-            }
-
-            const path = `${workingDirectory}/${item.location.path}`;
-            const locationUri = URI.file(path).toString();
-
-            const helpUri: string = item.url ? item.url : undefined;
-            const helpUrlName: string = helpUri ? item.check_name : undefined;
-
-            let fileDiagnostics = diagnostics.get(locationUri);
-            if (!fileDiagnostics) {
-              fileDiagnostics = [];
-              diagnostics.set(locationUri, fileDiagnostics);
-            }
-            let message: string = item.check_name;
-            if (item.description) {
-              message = item.description;
-            }
-            fileDiagnostics.push({
-              message: message,
-              range: range || Range.create(0, 0, 0, 0),
-              severity: severity,
-              source: "ansible-lint",
-              code: helpUrlName,
-              codeDescription: { href: helpUri },
-            });
+            begin_column = item.location.lines.begin.column || 1;
+          } else if ( // location.positions
+            item.location.positions &&
+            (item.location.positions.begin ||
+              typeof item.location.positions.begin.line === "number")
+          ) {
+            begin_line =
+              item.location.positions.begin.line || 1;
+            begin_column = item.location.positions.begin.column || 1;
+          } else {
+            continue
           }
+
+          const start: Position = {
+            line: begin_line - 1,
+            character: begin_column - 1,
+          };
+          const end: Position = {
+            line: begin_line - 1,
+            character: integer.MAX_VALUE,
+          };
+
+          const range: Range = {
+            start: start,
+            end: end,
+          };
+
+          let severity: DiagnosticSeverity = DiagnosticSeverity.Error;
+          if (item.level) {
+            if (item.level === "error") {
+              severity = DiagnosticSeverity.Error;
+            } else if (item.level === "warning") {
+              severity = DiagnosticSeverity.Warning;
+            }
+          }
+
+          const path = `${workingDirectory}/${item.location.path}`;
+          const locationUri = URI.file(path).toString();
+
+          const helpUri: string = item.url ? item.url : undefined;
+          const helpUrlName: string = helpUri ? item.check_name : undefined;
+
+          let fileDiagnostics = diagnostics.get(locationUri);
+          if (!fileDiagnostics) {
+            fileDiagnostics = [];
+            diagnostics.set(locationUri, fileDiagnostics);
+          }
+          let message: string = item?.description || item?.content?.body || item.check_name;
+          fileDiagnostics.push({
+            message: message,
+            range: range || Range.create(0, 0, 0, 0),
+            severity: severity,
+            source: "ansible-lint",
+            code: helpUrlName,
+            codeDescription: { href: helpUri },
+          });
         }
       }
     } catch (error) {
